@@ -1,0 +1,1 @@
+int Equation(void);
