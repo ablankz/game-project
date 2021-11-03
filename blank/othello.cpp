@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 int game_mode_select(void);
@@ -7,6 +8,21 @@ void multi_mode(void);
 int turn_select(char player[]);
 void confirm(int* flag);
 int game(char py1[],char py2[]);
+void display(char py1[],char py2[]);
+
+//othello board
+int board[9][9]={
+    {100,100,100,100,100,100,100,100},
+    {100,0,0,0,0,0,0,0,0},
+    {100,0,0,0,0,0,0,0,0},
+    {100,0,0,0,0,0,0,0,0},
+    {100,0,0,0,1,2,0,0,0},
+    {100,0,0,0,2,1,0,0,0},
+    {100,0,0,0,0,0,0,0,0},
+    {100,0,0,0,0,0,0,0,0},
+    {100,0,0,0,0,0,0,0,0},
+};
+
 
 int main(void){
     if(game_mode_select()){
@@ -27,6 +43,34 @@ void confirm(int* flag){
     else printf("\n");
     return;
 }
+
+void display(char py1[],char py2[]){
+    int i,j;
+    printf("\n%s :: @\n%s :: *\nempty :: -\n\n",py1,py2);
+    printf("    1  2  3  4  5  6  7  8 \n");
+    for(i=1;i<=8;++i){
+        printf(" %d ",i);
+        for(int j=1;j<=8;++j){
+            switch(board[i][j]){
+                case 0:
+                    printf(" - ");
+                    break;
+                case 1:
+                    printf(" @ ");
+                    break;
+                case 2:
+                    printf(" * ");
+                    break;
+                default:
+                    exit(-1);
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
+    return;
+}
+
 
 /*
  * @return alone_mode >> 0 multi_mode >>1
@@ -56,15 +100,22 @@ int game_mode_select(void){
 void multi_mode(void){
     char p1_name[128],p2_name[128];
     //win player (0->draw)
-    int winner,load;
+    int winner,load,name_flag=1;
     printf("Plaese player1 name.\n>>> ");
     scanf("%127s",p1_name);
-    printf("\nPlaese player2 name.\n>>> ");
-    scanf("%127s",p2_name);
+    while(name_flag){
+        printf("\nPlaese player2 name.\n>>> ");
+        scanf("%127s",p2_name);
+        if(strcmp(p1_name,p2_name)){
+            name_flag=0;
+        }else{
+            printf("Please use a different name from player1.\n");
+        }
+    }
     printf("\n");
     //turn_select 0->first 1->second
     if(turn_select(p1_name)){
-        printf("\n%s :: first turn\n%s :: second turn\n",p2_name,p1_name);
+        printf("\n%s :: first turn(black:@)\n%s :: second turn(white:*)\n",p2_name,p1_name);
         //return 0 -> p2 win:1 -> p1 win draw -> 2
         load = game(p2_name,p1_name);
         if(!load){
@@ -75,7 +126,7 @@ void multi_mode(void){
             winner=0;
         }
     }else{
-        printf("\n%s :: first turn\n%s :: second turn\n",p1_name,p2_name);
+        printf("\n%s :: first turn(black:@)\n%s :: second turn(white:*)\n",p1_name,p2_name);
         //return 0 -> p1 win:1 -> p2 win draw -> 2
         load = game(p1_name,p2_name);
         if(!load){
@@ -103,6 +154,8 @@ void multi_mode(void){
 */
 int game(char py1[],char py2[]){
     int winner=0;
+    //display
+    display(py1,py2);
 
     return winner;
 }
