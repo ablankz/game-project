@@ -11,6 +11,7 @@ int game(char py1[],char py2[]);
 void display(char py1[],char py2[]);
 int whole_check(int check_board[][2],int turn);
 int single_check(int i,int j,int turn,int signal);
+int check_display(int check_board[][2],int turn,char turn_username[],int select_point[]);
 
 //othello board
 int board[9][9]={
@@ -33,14 +34,14 @@ int main(void){
     }else{
         //alone_mode
     }
-
     return 0;
 }
 
 void confirm(int* flag){
-    char confirm_key;
+    char confirm_key,buf[10];
     printf("If the above content are acceptable, please put 'y'. If you want to modify the above content, please put other key (other than 'y').\n>>> ");
-    scanf(" %c",&confirm_key);
+    fgets(buf,10,stdin);
+    sscanf(buf,"%c",&confirm_key);
     if(confirm_key=='y') *flag = 0;
     else printf("\n");
     return;
@@ -79,12 +80,13 @@ void display(char py1[],char py2[]){
  *
 */
 int game_mode_select(void){
-    char game_mode;
+    char game_mode,buf[10];
     int flag=1;
     printf("===============Please select game mode===============\n\n");
     while(flag){
         printf("If you want to play alone, please put 'a'. If you want to play with two people, please put 'b'(if you select this mode, you cannot earn points.).\n>>> ");
-        scanf(" %c",&game_mode);
+        fgets(buf,10,stdin);
+        sscanf(buf,"%c",&game_mode);
         if(game_mode=='a'){
             printf("\nyour select ==>>>> alone mode\n\n");
             confirm(&flag); 
@@ -100,22 +102,23 @@ int game_mode_select(void){
 }
 
 void multi_mode(void){
-    char p1_name[128],p2_name[128];
+    char p1_name[128],p2_name[128],buf[256];
     //win player (0->draw)
     int winner,load,name_flag=1;
     printf("Plaese player1 name.\n>>> ");
-    scanf("%127s",p1_name);
+    fgets(buf,256,stdin);
+    sscanf(buf,"%127s",p1_name);
     while(name_flag){
         printf("\nPlaese player2 name.\n>>> ");
-        scanf("%127s",p2_name);
+        fgets(buf,256,stdin);
+        sscanf(buf,"%127s",p2_name);
         if(strcmp(p1_name,p2_name)){
             name_flag=0;
         }else{
             printf("Please use a different name from player1.\n");
         }
     }
-    printf("\n");
-    //turn_select 0->first 1->second
+    printf("\n");    //turn_select 0->first 1->second
     if(turn_select(p1_name)){
         printf("\n%s :: first turn(black:@)\n%s :: second turn(white:*)\n",p2_name,p1_name);
         //return 0 -> p2 win:1 -> p1 win draw -> 2
@@ -155,26 +158,38 @@ void multi_mode(void){
  * @return py1 win -> 0 py2 win ->1 draw -> 2
 */
 int game(char py1[],char py2[]){
-    int winner=0,able_check[64][2],able_num,v_num,h_num,flag=1;
+    int winner=0,able_check[64][2],able_num,select_point[2];
     //display
     display(py1,py2);
+    check_display(able_check,1,py1,select_point);
+    printf("(%d %d)\n",select_point[0],select_point[1]);
+    return winner;
+}
 
-    printf("%s::turn\n",py1);
-    able_num=whole_check(able_check,1);
+int check_display(int check_board[][2],int turn,char turn_username[],int select_point[]){
+    int able_num,flag=1;
+    char buf[10];
+    printf("%s:: turn\n",turn_username);
+    able_num=whole_check(check_board,turn);
     printf("your_able_point >> %d\n",able_num);
     for(int i=0;i<able_num;++i){
-            printf("(%d,%d) ",able_check[i][0],able_check[i][1]);
+            printf("(%d,%d) ",check_board[i][0],check_board[i][1]);
     }
     while(flag){
         printf("\n\nPlease enter the position you want to place in the following format.\n");
         printf("verticalNumber horizontalNumber(Ex.3 4)\n >>>");
-        scanf("%d %d",&v_num,&h_num);
-        printf("\nyour select ==>>>> (%d,%d)\n\n",v_num,h_num);
+        fgets(buf,10,stdin);
+        sscanf(buf,"%d %d",&select_point[0],&select_point[1]);
+        printf("\nyour select ==>>>> (%d,%d)\n\n",select_point[0],select_point[1]);
         confirm(&flag);
     }
-    printf("(%d %d)\n",v_num,h_num);
-    return winner;
+    while(!flag){
+        
+        flag=1;
+    }
+    return able_num;
 }
+
 
 int whole_check(int check_board[][2],int turn){
     int i,j,num=0;
@@ -380,12 +395,13 @@ int single_check(int i,int j,int turn,int signal){
  * @return first ->0 second ->1 
 */
 int turn_select(char player[]){
-    char attack_turn,confirm_key;
+    char attack_turn,confirm_key,buf[10];
     int result,flag=1;
     printf("%s:: Please select attack turn.\n\n",player);
     while(flag){
         printf("If you want to select random, please put 'r'. If you want to select first attack, please select 'a'. If you want to select second attack, please select 'b'.\n>>> ");
-        scanf(" %c",&attack_turn);
+        fgets(buf,10,stdin);
+        sscanf(buf,"%c",&attack_turn);
         if(attack_turn=='a'){
             printf("\nyour select ==>>>> first attack\n\n");           
             confirm(&flag);
