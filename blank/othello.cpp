@@ -12,6 +12,7 @@ void display(char py1[],char py2[]);
 int whole_check(int check_board[][2],int turn);
 int single_check(int i,int j,int turn,int signal);
 int check_display(int turn,char turn_username[],int select_point[]);
+void p_exe(int i,int j,int turn,int signal);
 
 //othello board
 int board[9][9]={
@@ -25,6 +26,8 @@ int board[9][9]={
     {100,0,0,0,0,0,0,0,0},
     {100,0,0,0,0,0,0,0,0},
 };
+//chane
+int chane[8]={1,1,1,1,1,1,1,1};
 
 
 int main(void){
@@ -158,15 +161,202 @@ void multi_mode(void){
  * @return py1 win -> 0 py2 win ->1 draw -> 2
 */
 int game(char py1[],char py2[]){
-    int winner=0,select_point[2];
-    //display
-    display(py1,py2);
-    if(check_display(1,py1,select_point)){
-        printf("(%d %d)\n",select_point[0],select_point[1]);
-    }else{
-        printf("next turn \n");
+    int winner=0,select_point[2],i,turn;
+    char turn_user[256];
+    for(i=0;;++i){
+        turn = i % 2 + 1;
+        if(turn==1){
+            strcpy(turn_user,py1);
+        }else{
+            strcpy(turn_user,py2);
+        }
+        printf("\nturn <%d>\n",i+1);
+        //display
+        display(py1,py2);
+        if(check_display(turn,turn_user,select_point)){
+            p_exe(select_point[0],select_point[1],turn,-1);
+        }
     }
     return winner;
+}
+
+void p_exe(int i,int j,int turn,int signal){
+    int a,b,min_a,max_a,min_b,max_b,para[8];// clockDirection
+    int op_turn; 
+    int num=0,a_key,b_key,t_b_key,p,tool[8][2],result=0;
+
+    op_turn= (turn==1) ? 2:1;
+
+    if(signal<0){
+        board[i][j]=turn;
+        if(i==1){
+            min_a=i;
+            a_key=1;
+        }else{
+            min_a=i-1;
+            a_key=0;
+        }
+        if(j==1){
+            min_b=j;
+            b_key=1;
+            t_b_key=1;
+        }else{
+            min_b=j-1;
+            b_key=0;
+            t_b_key=0;
+        }
+
+        max_a = (i==8) ? i : i+1;
+        max_b = (j==8) ? j : j+1;
+
+        for(a=min_a;a<=max_a;++a,++a_key){
+            for(b=min_b;b<=max_b;++b,++b_key){
+                if(board[a][b]==op_turn){
+                    tool[num][0]=a;
+                    tool[num][1]=b;
+                    para[num++]=a_key*10+b_key;
+                }
+            }
+            b_key=t_b_key;
+        }
+        for(p=0;p<num;++p){
+            p_exe(i,j,turn,para[p]);
+        }
+    }else{
+        switch(signal){
+            case 0:
+                //left-top
+                if(i-chane[0]==1) return;
+                if(j-chane[0]==1) return;
+                if(board[i-chane[0]-1][j-chane[0]-1]==op_turn){
+                    ++chane[0];
+                    p_exe(i,j,turn,signal);
+                    return;
+                }else if(board[i-chane[0]-1][j-chane[0]-1]==turn){
+                    for(int exe_i=1;exe_i<=chane[0];++exe_i){
+                        board[i-exe_i][j-exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 1:
+                //middle-top
+                if(i-chane[1]==1) return;
+                if(board[i-chane[1]-1][j]==op_turn){
+                    ++chane[1];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i-chane[1]-1][j]==turn){
+                    for(int exe_i=1;exe_i<=chane[1];++exe_i){
+                        board[i-exe_i][j]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 2:
+                //right-top
+                if(i-chane[2]==0) return;
+                if(j+chane[2]==8) return;
+                if(board[i-chane[2]-1][j+chane[2]+1]==op_turn){
+                    ++chane[2];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i-chane[2]-1][j+chane[2]+1]==turn){
+                    for(int exe_i=1;exe_i<=chane[2];++exe_i){
+                        board[i-exe_i][j+exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 10:
+                //left-middle
+                if(j-chane[3]==1) return;
+                if(board[i][j-chane[3]-1]==op_turn){
+                    ++chane[3];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i][j-chane[3]-1]==turn){
+                    for(int exe_i=1;exe_i<=chane[3];++exe_i){
+                        board[i][j-exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 12:
+                //right-middle
+                if(j+chane[4]==8) return;
+                if(board[i][j+chane[4]+1]==op_turn){
+                    ++chane[4];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i][j+chane[4]+1]==turn){
+                    for(int exe_i=1;exe_i<=chane[4];++exe_i){
+                        board[i][j+exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 20:
+                //left-bottom
+                if(i+chane[5]==8) return;
+                if(j-chane[5]==1) return;
+                if(board[i+chane[5]+1][j-chane[5]-1]==op_turn){
+                    ++chane[5];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i+chane[5]+1][j-chane[5]-1]==turn){
+                    for(int exe_i=1;exe_i<=chane[5];++exe_i){
+                        board[i+exe_i][j-exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 21:
+                //middle-bottom
+                if(i+chane[6]==8) return;
+                if(board[i+chane[6]+1][j]==op_turn){
+                    ++chane[6];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i+chane[6]+1][j]==turn){
+                    for(int exe_i=1;exe_i<=chane[6];++exe_i){
+                        board[i+exe_i][j]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            case 22:
+                //left-bottom
+                if(i+chane[7]==8) return;
+                if(j+chane[7]==8) return;
+                if(board[i+chane[7]+1][j+chane[7]+1]==op_turn){
+                    ++chane[7];
+                    p_exe(i,j,turn,signal);
+                }else if(board[i+chane[7]+1][j+chane[7]+1]==turn){
+                    for(int exe_i=1;exe_i<=chane[7];++exe_i){
+                        board[i+exe_i][j+exe_i]=turn;
+                    }
+                    return;
+                }else{
+                    return;
+                }
+                break;
+            default:
+                exit(-1);
+        }
+    }
+    for(int df_chane=0;df_chane<8;++df_chane){
+        chane[df_chane]=1;
+    }
+    return;
 }
 
 int check_display(int turn,char turn_username[],int select_point[]){
