@@ -145,9 +145,9 @@ void multi_mode(void){
     if(!winner){
         printf("draw!!\n");
     }else if(winner==1){
-        printf("%s::winner!!",p1_name);
+        printf("%s::winner!!\n",p1_name);
     }else{
-        printf("%s::winner!!",p2_name);
+        printf("%s::winner!!\n",p2_name);
     }
 
     return;
