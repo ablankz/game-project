@@ -161,9 +161,10 @@ void multi_mode(void){
  * @return py1 win -> 0 py2 win ->1 draw -> 2
 */
 int game(char py1[],char py2[]){
-    int winner=0,select_point[2],i,turn;
+    int winner=0,select_point[2],i,turn,low=0;
     char turn_user[256];
     for(i=0;;++i){
+        if(low==2) break;
         turn = i % 2 + 1;
         if(turn==1){
             strcpy(turn_user,py1);
@@ -175,6 +176,9 @@ int game(char py1[],char py2[]){
         display(py1,py2);
         if(check_display(turn,turn_user,select_point)){
             p_exe(select_point[0],select_point[1],turn,-1);
+            low=0;
+        }else{
+            ++low;
         }
     }
     return winner;
@@ -380,7 +384,7 @@ int check_display(int turn,char turn_username[],int select_point[]){
         printf("\nyour select ==>>>> (%d,%d)\n\n",select_point[0],select_point[1]);
         confirm(&flag);
         if(flag){
-            break;
+            continue;
         }
         for(int i=0;i<able_num;++i){
             if(select_point[0]==check_board[i][0] && select_point[1]==check_board[i][1]) 
