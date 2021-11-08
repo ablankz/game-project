@@ -161,7 +161,7 @@ void multi_mode(void){
  * @return py1 win -> 0 py2 win ->1 draw -> 2
 */
 int game(char py1[],char py2[]){
-    int winner=0,select_point[2],i,turn,low=0;
+    int winner=0,select_point[2],i,j,turn,low=0,num_1=0,num_2=0;
     char turn_user[256];
     for(i=0;;++i){
         if(low==2) break;
@@ -181,6 +181,23 @@ int game(char py1[],char py2[]){
             ++low;
         }
     }
+
+    for(i=1;i<=8;++i){
+        for(j=1;j<=8;++j){
+            if(board[i][j]==1){
+                ++num_1;
+            }else if(board[i][j]==2){
+                ++num_2;
+            }
+        }        
+    }
+    if(num_1>num_2) winner=0;
+    else if(num_1<num_2) winner=1;
+    else winner=2;
+
+    printf("%s_point::%d\n",py1,num_1);
+    printf("%s_point::%d\n\n",py2,num_2);
+
     return winner;
 }
 
