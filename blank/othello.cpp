@@ -5,14 +5,24 @@
 
 int game_mode_select(void);
 void multi_mode(void);
+int alone_mode(void);
 int turn_select(char player[]);
 void confirm(int* flag);
 int game(char py1[],char py2[]);
+int ai_game(char py1[],char py2[],int py_turn);
 void display(char py1[],char py2[]);
 int whole_check(int check_board[][2],int turn);
 int single_check(int i,int j,int turn,int signal);
 int check_display(int turn,char turn_username[],int select_point[]);
+int ai_check_display(int turn,char turn_username[],int select_point[]);
 void p_exe(int i,int j,int turn,int signal);
+void whole_ai_check(int check_board[][2],int select_point[],int able_num);
+int single_ai_check(int i,int j);
+
+
+const char* comname_list[10]={
+    "Jacob","Sophia","Harry","Emma","Thomas","Charlotte","Louis","Lola","Aiko","Taro"
+};
 
 //othello board
 int board[9][9]={
@@ -36,6 +46,7 @@ int main(void){
         multi_mode();
     }else{
         //alone_mode
+        alone_mode();
     }
     return 0;
 }
@@ -104,6 +115,59 @@ int game_mode_select(void){
     return (game_mode=='a') ? 0 : 1 ;  
 }
 
+/*
+ * @return 0->lose 1->win 2->draw
+*/
+int alone_mode(void){
+    char pyname[256],comname[256],buf[512];
+    int name_flag=1,id,result,load;
+    printf("Plaese player name.\n>>> ");
+    fgets(buf,512,stdin);
+    sscanf(buf,"%255s",pyname);
+    while(name_flag){
+        srand((unsigned int)time(NULL));
+        id = rand()%10;
+        if(strcmp(pyname,comname_list[id])){
+            strcpy(comname,comname_list[id]);
+            name_flag=0;
+        }
+    }
+    printf("\ncom_name::%s\n\n",comname);
+
+    if(turn_select(pyname)){
+        printf("\n%s :: first turn(black:@)\n%s :: second turn(white:*)\n",comname,pyname);
+        //return 0 -> com win:1 -> py win draw -> 2
+        load = ai_game(comname,pyname,1);
+        if(!load){
+            result=0;
+        }else if(load==1){
+            result=1;
+        }else{
+            result=2;
+        }
+    }else{
+        printf("\n%s :: first turn(black:@)\n%s :: second turn(white:*)\n",pyname,comname);
+        //return 0 -> py win:1 -> com win draw -> 2
+        load = ai_game(pyname,comname,0);
+        if(!load){
+            result=1;
+        }else if(load==1){
+            result=0;
+        }else{
+            result=2;
+        } 
+    }
+    if(!result){
+        printf("You are loser!!\n");
+    }else if(result==1){
+        printf("You are winner!!\n");
+    }else{
+        printf("draw!!\n");
+    }
+
+    return result;
+}
+
 void multi_mode(void){
     char p1_name[256],p2_name[256],buf[512];
     //win player (0->draw)
@@ -157,11 +221,67 @@ void multi_mode(void){
 }
 
 /*
+ * @param py_turn 0->py:first 1->py:second
+*/
+int ai_game(char py1[],char py2[],int py_turn){
+    int winner,select_point[2],i,j,turn,low=0,num_1=0,num_2=0;
+    char turn_user[256];
+    int py = (!py_turn) ? 1 : 2;
+    for(i=0;;++i){
+        if(low==2) break;
+        turn = i % 2 + 1;
+        if(turn==1){
+            strcpy(turn_user,py1);
+        }else{
+            strcpy(turn_user,py2);
+        }
+        printf("\nturn <%d>\n",i+1);
+        //display
+        display(py1,py2);
+        if(turn==py){
+            //player turn
+            if(check_display(turn,turn_user,select_point)){
+                p_exe(select_point[0],select_point[1],turn,-1);
+                low=0;
+            }else{
+                ++low;
+            }
+        }else{
+            //computer tern
+            if(ai_check_display(turn,turn_user,select_point)){
+                p_exe(select_point[0],select_point[1],turn,-1);
+                low=0;
+            }else{
+                ++low;
+            }
+        }
+    }
+
+    for(i=1;i<=8;++i){
+        for(j=1;j<=8;++j){
+            if(board[i][j]==1){
+                ++num_1;
+            }else if(board[i][j]==2){
+                ++num_2;
+            }
+        }        
+    }
+    if(num_1>num_2) winner=0;
+    else if(num_1<num_2) winner=1;
+    else winner=2;
+
+    printf("%s_point::%d\n",py1,num_1);
+    printf("%s_point::%d\n\n",py2,num_2);
+
+    return winner;
+}
+
+/*
  * @param py1 -> first atacker py2 -> second atacker
  * @return py1 win -> 0 py2 win ->1 draw -> 2
 */
 int game(char py1[],char py2[]){
-    int winner=0,select_point[2],i,j,turn,low=0,num_1=0,num_2=0;
+    int winner,select_point[2],i,j,turn,low=0,num_1=0,num_2=0;
     char turn_user[256];
     for(i=0;;++i){
         if(low==2) break;
@@ -380,6 +500,24 @@ void p_exe(int i,int j,int turn,int signal){
     return;
 }
 
+int ai_check_display(int turn,char turn_username[],int select_point[]){
+    int able_num,flag=1,key=0,check_board[64][2];
+    char buf[256];
+    printf("%s:: turn\n",turn_username);
+    able_num=whole_check(check_board,turn);
+    if(!able_num){
+        printf("your_able_point >> 0\nPlease wait until the next turn.\n\n");
+        return 0;
+    }
+    printf("your_able_point >> %d\n",able_num);
+    for(int i=0;i<able_num;++i){
+            printf("(%d,%d) ",check_board[i][0],check_board[i][1]);
+    }
+    whole_ai_check(check_board,select_point,able_num);
+    printf("\nyour select ==>>>> (%d,%d)\n\n",select_point[0],select_point[1]);
+    return able_num;
+}
+
 int check_display(int turn,char turn_username[],int select_point[]){
     int able_num,flag=1,key=0,check_board[64][2];
     char buf[256];
@@ -415,6 +553,36 @@ int check_display(int turn,char turn_username[],int select_point[]){
     return able_num;
 }
 
+void whole_ai_check(int check_board[][2],int select_point[],int able_num){
+    
+    int buf[64],value=0,result[64],key=0,id;
+
+    for(int i=0;i<able_num;++i){
+        //優先順位の高いものほどおおきな値を返す
+        buf[i]=single_ai_check(check_board[i][0],check_board[i][1]);
+    }
+    for(int i=0;i<able_num;++i){
+        if(value<buf[i]){
+            value=buf[i];
+            key=0;
+            result[key++]=i;
+        }else if(value==buf[i]){
+            result[key++]=i;
+        }
+    }
+    srand((unsigned int)time(NULL));
+    id = rand()%key;
+    select_point[0]=check_board[result[id]][0];
+    select_point[1]=check_board[result[id]][1];
+    
+    return;
+}
+
+int single_ai_check(int i,int j){
+    if((i==1||i==8)&&(j==1||j==8)) return 5;
+    if((i==1||i==2||i==7||i==8)&&(j==1||j==2||j==7||j==8)) return 0;
+    return 1;
+}
 
 int whole_check(int check_board[][2],int turn){
     int i,j,num=0;
